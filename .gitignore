@@ -37,3 +37,7 @@ Thumbs.db
 # Generated assets / render output
 local/output/
 services/**/output/
+
+# Stray scratch file (sandbox couldn't unlink; safe to delete on Windows)
+.trunctest
+**/.trunctest

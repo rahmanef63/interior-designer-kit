@@ -27,10 +27,11 @@ export default defineSchema({
     areaSqm: v.optional(v.number()),
     budgetIdr: v.optional(v.number()),
     deadline: v.optional(v.number()),
+    surveyAt: v.optional(v.number()), // scheduled site survey (set during lead→briefing)
     status: projectStatus,
     currentStage: stage,
-    // Assigned member per role, e.g. { designer: "<memberId>" }.
-    pic: v.optional(v.record(role, v.id("members"))),
+    // Assigned members per role, e.g. [{ role: "designer", memberId }].
+    pic: v.optional(v.array(v.object({ role, memberId: v.id("members") }))),
   })
     .index("by_status", ["status"])
     .index("by_stage", ["currentStage"]),
@@ -72,6 +73,17 @@ export default defineSchema({
     unit: v.string(),
     qty: v.number(),
     unitPriceIdr: v.number(),
+  }).index("by_project", ["projectId"]),
+
+  // Stage 2 output: structured design brief (AI-drafted, designer-edited).
+  briefs: defineTable({
+    projectId: v.id("projects"),
+    summary: v.string(), // markdown
+    fungsi: v.optional(v.string()),
+    style: v.optional(v.string()),
+    prioritas: v.optional(v.string()),
+    timeline: v.optional(v.string()),
+    scope: v.optional(v.string()),
   }).index("by_project", ["projectId"]),
 
   // BYOK: web users store their own AI key, encrypted at rest.

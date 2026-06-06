@@ -9,6 +9,7 @@ import { internalAction, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { leadSource, spaceType } from "./validators";
+import { sendWhatsAppText } from "./lib/whatsapp";
 
 type LeadFields = {
   name: string;
@@ -58,12 +59,12 @@ async function parseLead(text: string): Promise<LeadFields> {
   return toolUse.input;
 }
 
-/** Internal: AI-parse one inbound message and create the lead project. */
+/** Internal: AI-parse one inbound message, create the lead project, auto-reply. */
 export const processInbound = internalAction({
   args: { from: v.string(), text: v.string() },
   handler: async (ctx, { from, text }): Promise<{ code: string }> => {
     const fields = await parseLead(text);
-    return await ctx.runMutation(internal.intake.createFromLead, {
+    const { code, title } = await ctx.runMutation(internal.intake.createFromLead, {
       name: fields.name,
       phone: fields.phone ?? from,
       source: "whatsapp",
@@ -73,6 +74,15 @@ export const processInbound = internalAction({
       location: fields.location,
       needs: fields.needs,
     });
+
+    // Auto-reply acknowledgment to the client.
+    await sendWhatsAppText(
+      from,
+      `Halo! Terima kasih sudah menghubungi kami. 🙏\n` +
+        `Inquiry-mu "${title}" sudah kami catat (No. ${code}).\n` +
+        `Tim kami akan segera menghubungi untuk jadwal survey lokasi.`,
+    );
+    return { code };
   },
 });
 
@@ -99,10 +109,11 @@ export const createFromLead = internalMutation({
     // Project code ID-YYYY-NNN.
     const count = (await ctx.db.query("projects").collect()).length;
     const code = `ID-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`;
+    const title = a.needs ?? `${a.spaceType ?? "Project"} — ${a.name}`;
 
     const projectId = await ctx.db.insert("projects", {
       code,
-      title: a.needs ?? `${a.spaceType ?? "Project"} — ${a.name}`,
+      title,
       clientId,
       spaceType: a.spaceType ?? "other",
       areaSqm: a.areaSqm,
@@ -118,6 +129,6 @@ export const createFromLead = internalMutation({
       startedAt: Date.now(),
     });
 
-    return { code };
+    return { projectId, code, title };
   },
 });
