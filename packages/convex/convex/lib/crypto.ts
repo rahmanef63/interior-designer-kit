@@ -11,7 +11,9 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-function b64ToBytes(b64: string): Uint8Array {
+// Inferred return type is Uint8Array<ArrayBuffer> so Web Crypto (importKey/
+// encrypt/decrypt) accepts it on TS 5.7+ (avoids the ArrayBufferLike mismatch).
+function b64ToBytes(b64: string) {
   const bin = atob(b64);
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
