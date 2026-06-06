@@ -19,14 +19,9 @@ function AuthNavInner() {
   if (!isAuthenticated) return <a href="/signin">Masuk</a>;
   const label = me?.name || me?.email || "User";
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 10, marginLeft: 18 }}>
-      <span style={{ fontSize: 13 }}>{label}</span>
-      <button
-        onClick={() => signOut()}
-        style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", textDecoration: "underline", font: "inherit", fontSize: 13 }}
-      >
-        Keluar
-      </button>
+    <span className="nav-user">
+      <span>{label}</span>
+      <button className="linkbtn muted" onClick={() => signOut()}>Keluar</button>
     </span>
   );
 }

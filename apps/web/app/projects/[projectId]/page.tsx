@@ -86,7 +86,7 @@ export default function ProjectDetailPage() {
       {brief && (
         <section className="panel">
           <h2>Design Brief</h2>
-          <p style={{ whiteSpace: "pre-wrap" }}>{brief.summary}</p>
+          <p className="brief-body">{brief.summary}</p>
         </section>
       )}
 

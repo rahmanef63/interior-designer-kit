@@ -35,14 +35,11 @@ export default function SignInPage() {
         <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
         <label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} /></label>
         <button className="btn" type="submit" disabled={busy || !email || !password}>{flow === "signUp" ? "Daftar" : "Masuk"}</button>
-        {error && <p className="msg" style={{ color: "var(--warn)" }}>{error}</p>}
+        {error && <p className="msg-error">{error}</p>}
       </form>
-      <p className="lead" style={{ marginTop: 16 }}>
+      <p className="auth-switch">
         {flow === "signUp" ? "Sudah punya akun? " : "Belum punya akun? "}
-        <button
-          onClick={() => setFlow(flow === "signUp" ? "signIn" : "signUp")}
-          style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", textDecoration: "underline", font: "inherit" }}
-        >
+        <button className="linkbtn" onClick={() => setFlow(flow === "signUp" ? "signIn" : "signUp")}>
           {flow === "signUp" ? "Masuk" : "Daftar"}
         </button>
       </p>
