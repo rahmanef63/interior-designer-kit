@@ -19,4 +19,24 @@ export const run = internalMutation({
     ];
     for (const m of members) await ctx.db.insert("members", m);
 
-    // A sample lead so the pipeline board isn'
+    const clientId = await ctx.db.insert("clients", {
+      name: "Bu Sari",
+      phone: "628123456789",
+      source: "whatsapp",
+      location: "Bandung",
+    });
+    const projectId = await ctx.db.insert("projects", {
+      code: "ID-2026-001",
+      title: "Desain cafe 80m2",
+      clientId,
+      spaceType: "cafe",
+      areaSqm: 80,
+      budgetIdr: 150000000,
+      status: "active",
+      currentStage: "lead",
+    });
+    await ctx.db.insert("stageStates", { projectId, stage: "lead", status: "in_progress", startedAt: Date.now() });
+
+    return { seeded: members.length, sampleProject: "ID-2026-001" };
+  },
+});

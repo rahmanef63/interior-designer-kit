@@ -1,9 +1,9 @@
 /**
- * Lead intake automation: inbound message → AI parse → Client + Project.
+ * Lead intake automation: inbound message -> AI parse -> Client + Project.
  *
- * Uses the STUDIO system key (process.env.ANTHROPIC_API_KEY) — this is backend
- * automation with no user in context, separate from the per-user BYOK keys used
- * for interactive AI. Called by the WhatsApp webhook in http.ts.
+ * Uses the STUDIO system key (process.env.ANTHROPIC_API_KEY) — backend
+ * automation with no user in context, separate from per-user BYOK keys.
+ * Called by the WhatsApp webhook in http.ts.
  */
 import { internalAction, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
@@ -23,7 +23,6 @@ type LeadFields = {
   needs?: string;
 };
 
-// JSON schema for the AI tool (mirrors @id/core Client/Project fields).
 const LEAD_SCHEMA = {
   type: "object",
   properties: {
@@ -75,8 +74,6 @@ export const processInbound = internalAction({
       location: fields.location,
       needs: fields.needs,
     });
-
-    // Auto-reply acknowledgment to the client.
     await sendWhatsAppText(
       from,
       `Halo! Terima kasih sudah menghubungi kami. 🙏\n` +
@@ -106,9 +103,19 @@ export const createFromLead = internalMutation({
       source: a.source,
       location: a.location,
     });
-
-    // Project code ID-YYYY-NNN.
     const code = await nextProjectCode(ctx);
     const title = a.needs ?? `${a.spaceType ?? "Project"} — ${a.name}`;
-
-    const project
+    const projectId = await ctx.db.insert("projects", {
+      code,
+      title,
+      clientId,
+      spaceType: a.spaceType ?? "other",
+      areaSqm: a.areaSqm,
+      budgetIdr: a.budgetIdr,
+      status: "lead",
+      currentStage: "lead",
+    });
+    await ctx.db.insert("stageStates", { projectId, stage: "lead", status: "in_progress", startedAt: Date.now() });
+    return { projectId, code, title };
+  },
+});

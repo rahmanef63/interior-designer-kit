@@ -17,19 +17,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const tree = (
     <html lang="id">
       <body>
-        <nav className="topbar">
-          <span className="brand-wrap">
-            <Link href="/" className="brand">Interior Studio</Link>
-            <ModeBadge />
-          </span>
-          <div className="links">
-            <Link href="/dashboard">Pipeline</Link>
-            <Link href="/projects">Projects</Link>
-            <Link href="/settings">Settings</Link>
-            <AuthNav />
-          </div>
-        </nav>
-        <Providers>{children}</Providers>
+        <Providers>
+          <nav className="topbar">
+            <span className="brand-wrap">
+              <Link href="/" className="brand">Interior Studio</Link>
+              <ModeBadge />
+            </span>
+            <div className="links">
+              <Link href="/dashboard">Pipeline</Link>
+              <Link href="/projects">Projects</Link>
+              <Link href="/settings">Settings</Link>
+              <AuthNav />
+            </div>
+          </nav>
+          {children}
+        </Providers>
       </body>
     </html>
   );

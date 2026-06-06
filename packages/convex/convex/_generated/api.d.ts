@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as _shared_auth from "../_shared/auth.js";
+import type * as _shared_codes from "../_shared/codes.js";
 import type * as ai from "../ai.js";
 import type * as aiKeys from "../aiKeys.js";
 import type * as auth from "../auth.js";
@@ -34,6 +36,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "_shared/auth": typeof _shared_auth;
+  "_shared/codes": typeof _shared_codes;
   ai: typeof ai;
   aiKeys: typeof aiKeys;
   auth: typeof auth;
