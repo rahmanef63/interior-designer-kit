@@ -6,6 +6,7 @@ import { action, internalMutation, internalQuery, query } from "./_generated/ser
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { encryptSecret } from "./lib/crypto";
+import { requireUser } from "./_shared/auth";
 
 const provider = v.union(v.literal("anthropic"), v.literal("openai"));
 
@@ -13,6 +14,7 @@ const provider = v.union(v.literal("anthropic"), v.literal("openai"));
 export const store = action({
   args: { ownerId: v.string(), provider, apiKey: v.string(), label: v.optional(v.string()) },
   handler: async (ctx, args): Promise<void> => {
+    await requireUser(ctx);
     const secret = process.env.KEY_VAULT_SECRET;
     if (!secret) throw new Error("KEY_VAULT_SECRET is not configured");
     const encryptedKey = await encryptSecret(args.apiKey, secret);
@@ -32,7 +34,7 @@ export const _insert = internalMutation({
     const existing = await ctx.db
       .query("aiKeys")
       .withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId))
-      .collect();
+      .take(500);
     for (const k of existing) if (k.provider === args.provider) await ctx.db.delete(k._id);
     await ctx.db.insert("aiKeys", args);
   },
@@ -45,7 +47,7 @@ export const _getEncrypted = internalQuery({
     const keys = await ctx.db
       .query("aiKeys")
       .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
-      .collect();
+      .take(500);
     return keys.find((k) => k.provider === provider) ?? null;
   },
 });
@@ -54,10 +56,11 @@ export const _getEncrypted = internalQuery({
 export const list = query({
   args: { ownerId: v.string() },
   handler: async (ctx, { ownerId }) => {
+    await requireUser(ctx);
     const keys = await ctx.db
       .query("aiKeys")
       .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
-      .collect();
+      .take(500);
     return keys.map((k) => ({ provider: k.provider, label: k.label }));
   },
 });

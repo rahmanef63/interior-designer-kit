@@ -10,6 +10,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { leadSource, spaceType } from "./validators";
 import { sendWhatsAppText } from "./lib/whatsapp";
+import { nextProjectCode } from "./_shared/codes";
 
 type LeadFields = {
   name: string;
@@ -107,28 +108,7 @@ export const createFromLead = internalMutation({
     });
 
     // Project code ID-YYYY-NNN.
-    const count = (await ctx.db.query("projects").collect()).length;
-    const code = `ID-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`;
+    const code = await nextProjectCode(ctx);
     const title = a.needs ?? `${a.spaceType ?? "Project"} — ${a.name}`;
 
-    const projectId = await ctx.db.insert("projects", {
-      code,
-      title,
-      clientId,
-      spaceType: a.spaceType ?? "other",
-      areaSqm: a.areaSqm,
-      budgetIdr: a.budgetIdr,
-      status: "lead",
-      currentStage: "lead",
-    });
-
-    await ctx.db.insert("stageStates", {
-      projectId,
-      stage: "lead",
-      status: "in_progress",
-      startedAt: Date.now(),
-    });
-
-    return { projectId, code, title };
-  },
-});
+    const project

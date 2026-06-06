@@ -53,3 +53,6 @@ services/**/output/
 automation/local/.env
 automation/local/output/
 automation/local/.data/
+
+# Packaged skill artifact (install via Settings -> Capabilities, not repo source)
+*.skill

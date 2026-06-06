@@ -1,0 +1,9 @@
+#!/bin/sh
+# rr: local CI (no GitHub Actions cloud minutes).
+# Enable once:  git config core.hooksPath .githooks
+set -e
+echo "[pre-push] type-check shared spine (@id/core, @id/ui)..."
+pnpm --filter @id/core --filter @id/ui check-types
+echo "[pre-push] local runner smoke test..."
+node local/runner/index.mjs lead-parse "cafe 80m2 150jt Bandung" --dry-run >/dev/null
+echo "[pre-push] OK"

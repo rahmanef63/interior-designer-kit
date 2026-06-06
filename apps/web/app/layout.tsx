@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import "./globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { Providers } from "./providers";
@@ -18,13 +19,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <nav className="topbar">
           <span className="brand-wrap">
-            <a href="/" className="brand">Interior Studio</a>
+            <Link href="/" className="brand">Interior Studio</Link>
             <ModeBadge />
           </span>
           <div className="links">
-            <a href="/dashboard">Pipeline</a>
-            <a href="/projects">Projects</a>
-            <a href="/settings">Settings</a>
+            <Link href="/dashboard">Pipeline</Link>
+            <Link href="/projects">Projects</Link>
+            <Link href="/settings">Settings</Link>
             <AuthNav />
           </div>
         </nav>

@@ -2,9 +2,10 @@
 automation/agent_sdk_runner.py
 ==============================
 The richer engine: runs the same tools through the Claude Agent SDK's in-process
-MCP server and full agent loop. The SDK is imported lazily so the CLI (and the
-default ``direct`` engine) keep working even when ``claude-agent-sdk`` isn't
-installed. Exposes an async runner plus a synchronous wrapper.
+MCP server and full agent loop, PLUS any external MCP connectors declared in
+automation.config.json under "mcpServers" (stdio / sse / http). The SDK is
+imported lazily so the CLI (and the default ``direct`` engine) keep working even
+when ``claude-agent-sdk`` isn't installed.
 """
 from __future__ import annotations
 
@@ -35,9 +36,8 @@ async def run_agent_async(task: str, config: dict, model: str | None = None) -> 
 
     validate_registry(config)
 
-    # Wrap each registry handler as an SDK tool. The `_fn=fn` default-argument
-    # binding captures the correct handler per iteration -- without it, every
-    # generated tool would close over the loop's final `fn` (late-binding bug).
+    # Wrap each registry handler as an in-process SDK MCP tool. The `_fn=fn`
+    # default binds the correct handler per iteration (avoids late-binding bug).
     sdk_tools = []
     for spec in config.get("tools", []):
         fn = REGISTRY.get(spec.get("handler", spec["name"]))
@@ -49,28 +49,39 @@ async def run_agent_async(task: str, config: dict, model: str | None = None) -> 
         async def _sdk_tool(args, _fn=fn):
             try:
                 out = _fn(args or {})
-                text = (
-                    str(out.get("content", "")) if isinstance(out, dict) else str(out)
-                )
+                text = str(out.get("content", "")) if isinstance(out, dict) else str(out)
             except Exception as exc:  # stay safe inside the agent loop
                 text = f"Error: {exc}"
             return {"content": [{"type": "text", "text": text}]}
 
         sdk_tools.append(_sdk_tool)
 
-    # In-process MCP server. The dict key ("automation") forms the tool
-    # namespace the model sees: mcp__automation__<tool>.
     server = create_sdk_mcp_server(name="automation", version="0.1.0", tools=sdk_tools)
-    options = ClaudeAgentOptions(
-        mcp_servers={"automation": server},
-        allowed_tools=[
-            f"mcp__automation__{spec['name']}" for spec in config.get("tools", [])
-        ],
+
+    # In-process automation server + any EXTERNAL MCP connectors from the config.
+    # External servers use the standard MCP shapes:
+    #   {"type": "stdio", "command": ..., "args": [...], "env": {...}}
+    #   {"type": "sse"|"http", "url": ..., "headers": {...}}
+    external = config.get("mcpServers", {}) or {}
+    mcp_servers = {"automation": server, **external}
+    if external:
+        print(f"  MCP connectors: {', '.join(external)}")
+
+    opts = dict(
+        mcp_servers=mcp_servers,
         system_prompt=config.get("systemPrompt", ""),
         model=model or config.get("model"),
         # Auto-approve tool calls for unattended runs (no interactive prompts).
         permission_mode="bypassPermissions",
     )
+    # Tight allowlist when only our in-process tools exist. When external
+    # connectors are configured we can't enumerate their tools ahead of time, so
+    # we leave the allowlist open (bypassPermissions still auto-approves calls).
+    if not external:
+        opts["allowed_tools"] = [
+            f"mcp__automation__{spec['name']}" for spec in config.get("tools", [])
+        ]
+    options = ClaudeAgentOptions(**opts)
 
     final_parts: list[str] = []
     final_result: str | None = None
@@ -81,7 +92,6 @@ async def run_agent_async(task: str, config: dict, model: str | None = None) -> 
                     print(block.text, end="", flush=True)
                     final_parts.append(block.text)
                 elif isinstance(block, ToolUseBlock):
-                    # Tools are namespaced (mcp__automation__x); show the bare name.
                     name = block.name.split("__")[-1]
                     print(f"\n  -> tool: {name}({compact_args(block.input)})")
         elif isinstance(message, ResultMessage):

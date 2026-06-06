@@ -1,17 +1,21 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { spaceType, leadSource } from "./validators";
+import { requireUser } from "./_shared/auth";
+import { nextProjectCode } from "./_shared/codes";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("projects").order("desc").collect();
+    await requireUser(ctx);
+    return await ctx.db.query("projects").order("desc").take(500);
   },
 });
 
 export const get = query({
   args: { id: v.id("projects") },
   handler: async (ctx, { id }) => {
+    await requireUser(ctx);
     return await ctx.db.get(id);
   },
 });
@@ -27,18 +31,9 @@ export const create = mutation({
     deadline: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const projectId = await ctx.db.insert("projects", {
-      ...args,
-      status: "lead",
-      currentStage: "lead",
-    });
-    // Initialise the first stage state.
-    await ctx.db.insert("stageStates", {
-      projectId,
-      stage: "lead",
-      status: "in_progress",
-      startedAt: Date.now(),
-    });
+    await requireUser(ctx);
+    const projectId = await ctx.db.insert("projects", { ...args, status: "lead", currentStage: "lead" });
+    await ctx.db.insert("stageStates", { projectId, stage: "lead", status: "in_progress", startedAt: Date.now() });
     return projectId;
   },
 });
@@ -56,13 +51,9 @@ export const createWithClient = mutation({
     deadline: v.optional(v.number()),
   },
   handler: async (ctx, a) => {
-    const clientId = await ctx.db.insert("clients", {
-      name: a.clientName,
-      phone: a.phone,
-      source: a.source,
-    });
-    const count = (await ctx.db.query("projects").collect()).length;
-    const code = `ID-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`;
+    await requireUser(ctx);
+    const clientId = await ctx.db.insert("clients", { name: a.clientName, phone: a.phone, source: a.source });
+    const code = await nextProjectCode(ctx);
     const projectId = await ctx.db.insert("projects", {
       code,
       title: a.title,
@@ -74,12 +65,7 @@ export const createWithClient = mutation({
       status: "active",
       currentStage: "lead",
     });
-    await ctx.db.insert("stageStates", {
-      projectId,
-      stage: "lead",
-      status: "in_progress",
-      startedAt: Date.now(),
-    });
+    await ctx.db.insert("stageStates", { projectId, stage: "lead", status: "in_progress", startedAt: Date.now() });
     return { projectId, code };
   },
 });

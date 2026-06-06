@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useProjectDetail, useProjectActions } from "@/lib/data";
@@ -34,7 +35,7 @@ export default function ProjectDetailPage() {
 
   return (
     <main className="page">
-      <a href="/dashboard" className="back">← Pipeline</a>
+      <Link href="/dashboard" className="back">← Pipeline</Link>
       <div className="row-between">
         <div>
           <h1>{project.title}</h1>

@@ -82,7 +82,7 @@ export const projectContext = internalQuery({
 export const autoAssignPic = internalMutation({
   args: { projectId: v.id("projects"), role },
   handler: async (ctx, { projectId, role }) => {
-    const members = await ctx.db.query("members").collect();
+    const members = await ctx.db.query("members").take(500);
     const pick = members.find((m) => m.role === role && m.active);
     if (!pick) return null;
     const project = await ctx.db.get(projectId);

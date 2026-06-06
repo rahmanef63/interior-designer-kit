@@ -1,10 +1,14 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { leadSource } from "./validators";
+import { requireUser } from "./_shared/auth";
 
 export const list = query({
   args: {},
-  handler: async (ctx) => ctx.db.query("clients").order("desc").collect(),
+  handler: async (ctx) => {
+    await requireUser(ctx);
+    return await ctx.db.query("clients").order("desc").take(500);
+  },
 });
 
 export const create = mutation({
@@ -15,5 +19,8 @@ export const create = mutation({
     source: leadSource,
     location: v.optional(v.string()),
   },
-  handler: async (ctx, args) => ctx.db.insert("clients", args),
+  handler: async (ctx, args) => {
+    await requireUser(ctx);
+    return await ctx.db.insert("clients", args);
+  },
 });

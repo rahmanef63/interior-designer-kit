@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useDashboard } from "@/lib/data";
 import { STAGE_ORDER, STAGES } from "@id/core";
 
@@ -14,7 +15,7 @@ export default function DashboardPage() {
           <h1>Pipeline</h1>
           <p className="lead">{loading ? "Memuat…" : `${projects.length} project`} · 16 tahap</p>
         </div>
-        <a className="btn" href="/projects/new">+ Project</a>
+        <Link className="btn" href="/projects/new">+ Project</Link>
       </div>
 
       <div className="board">
@@ -29,10 +30,10 @@ export default function DashboardPage() {
                 {items.length > 0 && <span className="count">{items.length}</span>}
               </header>
               {items.map((p) => (
-                <a key={p._id} className="card" href={`/projects/${p._id}`}>
+                <Link key={p._id} className="card" href={`/projects/${p._id}`}>
                   <div className="card-title">{p.title}</div>
                   <div className="card-sub">{p.code} · {p.clientName}</div>
-                </a>
+                </Link>
               ))}
             </section>
           );

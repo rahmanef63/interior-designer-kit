@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useProjectActions } from "@/lib/data";
@@ -36,7 +37,7 @@ export default function NewProjectPage() {
 
   return (
     <main className="page narrow">
-      <a href="/dashboard" className="back">← Pipeline</a>
+      <Link href="/dashboard" className="back">← Pipeline</Link>
       <h1>Project baru</h1>
       <form className="form" onSubmit={submit}>
         <label>Nama klien<input value={f.clientName} onChange={set("clientName")} required /></label>

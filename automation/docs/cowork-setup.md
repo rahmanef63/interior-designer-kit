@@ -28,3 +28,21 @@ Create scheduled tasks for:
 ## 5. Guardrails
 Keep external/irreversible actions human-approved. Review the agent's plan in the
 progress sidebar before letting it act on anything that leaves your machine.
+
+## External MCP connectors (CLI `agent` engine)
+
+`automation.config.json` may include an optional `mcpServers` map. The local
+`agent` engine loads these alongside the in-process `automation` server, so the
+agent can call real connectors headlessly. Shapes:
+
+```jsonc
+"mcpServers": {
+  "filesystem": { "type": "stdio", "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "."] },
+  "notion":     { "type": "http",  "url": "https://mcp.notion.com/mcp", "headers": { "Authorization": "Bearer <token>" } }
+}
+```
+
+- stdio: `{type:"stdio", command, args, env}` · sse/http: `{type:"sse"|"http", url, headers}`.
+- The `direct` engine ignores `mcpServers` (plain tool loop).
+- The Cowork surface uses connectors you enable in the Cowork app (see `suggestedConnectors`).
+- Run with: `automation run "..." --engine agent`.

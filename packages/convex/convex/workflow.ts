@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { stage } from "./validators";
+import { requireUser } from "./_shared/auth";
 
 /** Mirror of @id/core STAGE_ORDER + gates (kept inline so Convex bundles cleanly). */
 const ORDER = [
@@ -19,10 +20,11 @@ const GATES: Record<(typeof ORDER)[number], "none" | "client_approval" | "paymen
 export const forProject = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, { projectId }) => {
+    await requireUser(ctx);
     return await ctx.db
       .query("stageStates")
       .withIndex("by_project", (q) => q.eq("projectId", projectId))
-      .collect();
+      .take(500);
   },
 });
 
@@ -30,6 +32,7 @@ export const forProject = query({
 export const clearGate = mutation({
   args: { projectId: v.id("projects"), stage },
   handler: async (ctx, { projectId, stage }) => {
+    await requireUser(ctx);
     const state = await ctx.db
       .query("stageStates")
       .withIndex("by_project_stage", (q) => q.eq("projectId", projectId).eq("stage", stage))
@@ -49,6 +52,7 @@ export const approve = mutation({
     comment: v.optional(v.string()),
   },
   handler: async (ctx, { projectId, stage, kind, approvedBy, comment }) => {
+    await requireUser(ctx);
     await ctx.db.insert("approvals", { projectId, stage, kind, approved: true, approvedBy, comment });
     const state = await ctx.db
       .query("stageStates")
@@ -62,6 +66,7 @@ export const approve = mutation({
 export const advanceStage = mutation({
   args: { projectId: v.id("projects") },
   handler: async (ctx, { projectId }) => {
+    await requireUser(ctx);
     const project = await ctx.db.get(projectId);
     if (!project) throw new Error("Project not found");
 

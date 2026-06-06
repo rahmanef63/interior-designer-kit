@@ -393,5 +393,16 @@
       "prompt": "Look up all records in 'projects'. Produce a dated digest 'digest-<today>.md' in ./output: group active projects by current stage, flag any with a deadline within 3 days or stuck waiting on an approval/payment gate, and list a combined action list. Create a task for each at-risk item. End with a one-line status summary.",
       "schedule": "0 1 * * *"
     }
-  ]
+  ],
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ]
+    }
+  }
 }

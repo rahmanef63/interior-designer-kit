@@ -9,7 +9,7 @@ export const checkDeadlines = internalMutation({
     const active = await ctx.db
       .query("projects")
       .withIndex("by_status", (q) => q.eq("status", "active"))
-      .collect();
+      .take(500);
     const atRisk = active.filter((p) => p.deadline && p.deadline < soon);
     // TODO: notify the PM via WhatsApp/email (see RENDER/WA integrations in .env).
     return { atRisk: atRisk.map((p) => p.code) };

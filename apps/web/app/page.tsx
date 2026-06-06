@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { STAGE_ORDER } from "@id/core";
 
 export default function Home() {
@@ -9,8 +10,8 @@ export default function Home() {
         diperkuat AI (BYOK). Local runner untuk Windows, web app untuk tim.
       </p>
       <div className="cta">
-        <a className="btn" href="/dashboard">Buka Pipeline →</a>
-        <a className="btn ghost" href="/settings">Atur API Key (BYOK)</a>
+        <Link className="btn" href="/dashboard">Buka Pipeline →</Link>
+        <Link className="btn ghost" href="/settings">Atur API Key (BYOK)</Link>
       </div>
     </main>
   );
