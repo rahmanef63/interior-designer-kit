@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import { ModeBadge } from "@/components/ModeBadge";
 
 export const metadata: Metadata = {
   title: "Interior Studio",
@@ -12,9 +13,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="id">
       <body>
         <nav className="topbar">
-          <a href="/" className="brand">Interior Studio</a>
+          <span className="brand-wrap">
+            <a href="/" className="brand">Interior Studio</a>
+            <ModeBadge />
+          </span>
           <div className="links">
             <a href="/dashboard">Pipeline</a>
+            <a href="/projects">Projects</a>
             <a href="/settings">Settings</a>
           </div>
         </nav>

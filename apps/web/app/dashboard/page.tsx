@@ -1,32 +1,39 @@
-import { STAGES, STAGE_ORDER, ROLES } from "@id/core";
+"use client";
 
-const gateLabel: Record<string, string> = {
-  none: "—",
-  client_approval: "Approval klien",
-  payment: "Pembayaran",
-  internal_qc: "QC internal",
-};
+import { useDashboard } from "@/lib/data";
+import { STAGE_ORDER, STAGES } from "@id/core";
 
 export default function DashboardPage() {
+  const projects = useDashboard();
+  const loading = projects === undefined;
+
   return (
     <main className="page">
-      <h1>Pipeline</h1>
-      <p className="lead">16 tahap workflow. Tiap kolom = satu stage dengan PIC, output, dan gate.</p>
+      <div className="row-between">
+        <div>
+          <h1>Pipeline</h1>
+          <p className="lead">{loading ? "Memuat…" : `${projects.length} project`} · 16 tahap</p>
+        </div>
+        <a className="btn" href="/projects/new">+ Project</a>
+      </div>
 
       <div className="board">
         {STAGE_ORDER.map((id) => {
           const s = STAGES[id];
+          const items = (projects ?? []).filter((p) => p.currentStage === id);
           return (
             <section key={id} className="col">
               <header className="col-head">
                 <span className="order">{s.order}</span>
                 <span className="title">{s.labelId}</span>
+                {items.length > 0 && <span className="count">{items.length}</span>}
               </header>
-              <p className="pic">PIC: <strong>{ROLES[s.pic].labelId}</strong></p>
-              <ul className="outputs">
-                {s.outputs.map((o) => <li key={o}>{o}</li>)}
-              </ul>
-              <footer className={`gate gate-${s.gate}`}>Gate: {gateLabel[s.gate]}</footer>
+              {items.map((p) => (
+                <a key={p._id} className="card" href={`/projects/${p._id}`}>
+                  <div className="card-title">{p.title}</div>
+                  <div className="card-sub">{p.code} · {p.clientName}</div>
+                </a>
+              ))}
             </section>
           );
         })}
