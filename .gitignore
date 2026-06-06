@@ -48,3 +48,8 @@ services/**/output/
 /packages/convex/convex/*.js.map
 /packages/convex/convex/lib/*.js
 /packages/convex/convex/lib/*.js.map
+
+# Cowork automation kit (runtime — keep source, ignore generated/secrets)
+automation/local/.env
+automation/local/output/
+automation/local/.data/

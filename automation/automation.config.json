@@ -1,0 +1,397 @@
+{
+  "domain": "interior-design",
+  "displayName": "Interior Design Studio",
+  "description": "Automation for a 16-stage interior design + build workflow: lead intake, briefing, survey, proposal/quotation, RAB, procurement, production, handover, after-sales.",
+  "version": "0.1.0",
+  "model": "claude-sonnet-4-6",
+  "systemPrompt": "You are an operations agent for an Indonesian interior design + build studio. Work flows through 16 stages: lead, briefing, survey, proposal, contract+DP, concept, layout, 3D, working drawings, RAB, procurement, production, site/installation, QC, handover, after-sales. Each stage has a PIC (admin, designer, surveyor, estimator, 3D artist, drafter, PM, workshop, site team). Use the tools to read inputs, produce deliverables (Bahasa Indonesia), keep simple records, and create follow-up tasks. Prefer doing the work over describing it; when ambiguous, make a reasonable assumption and state it. ALWAYS write outputs to ./output. NEVER send anything to a client, move money, or post externally without explicit human approval — drafts of quotations, invoices, and WhatsApp replies are prepared for a human to review and send. Survey measurements are the source of truth: read them before drafting RAB or 3D direction. Respect stage gates — do not treat a stage as advanced past an approval/payment gate without a recorded sign-off.",
+  "coworkCapabilities": [
+    "files",
+    "connectors",
+    "scheduled",
+    "web"
+  ],
+  "suggestedConnectors": [
+    "whatsapp",
+    "google-drive",
+    "google-calendar",
+    "gmail"
+  ],
+  "bestPractices": [
+    {
+      "title": "Money & client sends are approval-gated",
+      "detail": "The agent drafts proposals, quotations, invoices, and WhatsApp replies into ./output; a human reviews and sends. Never auto-send or auto-charge."
+    },
+    {
+      "title": "Survey first",
+      "detail": "Never draft a RAB, layout, or 3D direction without the structured survey measurements. Read the survey record/notes first; if missing, create a task to capture them."
+    },
+    {
+      "title": "Respect the 16 stage gates",
+      "detail": "Proposal, concept, layout, 3D, and RAB advance only on client approval; contract and handover on payment. Don't mark a stage done without a recorded sign-off."
+    },
+    {
+      "title": "Per-project scoped folder",
+      "detail": "Point Cowork at one client/project folder (./inbox + ./output), not your whole drive. Keep each project's photos, notes, and deliverables together."
+    },
+    {
+      "title": "Keep the RAB columnar",
+      "detail": "Store BoQ line items as JSONL/CSV records (save_record), not merged-cell spreadsheets. Reconcile category subtotals and the grand total in a verification pass before sending."
+    }
+  ],
+  "tools": [
+    {
+      "name": "read_document",
+      "description": "Read the full text contents of a file in the workspace. Use before summarizing, extracting, or transforming any document (brief notes, survey notes, specs).",
+      "handler": "read_document",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to the file, relative to the workspace root."
+          }
+        },
+        "required": [
+          "path"
+        ]
+      }
+    },
+    {
+      "name": "list_workspace",
+      "description": "List files in the workspace, optionally filtered by a glob (e.g. 'inbox/*'). Use to discover available inputs (inquiries, survey photos, notes).",
+      "handler": "list_workspace",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "pattern": {
+            "type": "string",
+            "description": "Optional glob relative to workspace root. Defaults to everything under ./inbox."
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "write_deliverable",
+      "description": "Write a finished deliverable to ./output (brief, proposal, quotation, RAB, BAST, digest). Use for any file the studio or client should receive.",
+      "handler": "write_deliverable",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "File name only, e.g. 'brief-ID-2026-014.md'."
+          },
+          "content": {
+            "type": "string",
+            "description": "Full file contents."
+          }
+        },
+        "required": [
+          "filename",
+          "content"
+        ]
+      }
+    },
+    {
+      "name": "save_record",
+      "description": "Append a structured record to the local JSONL datastore (one file per table). Use as a lightweight CRM/log: leads, clients, projects, rab_items, approvals.",
+      "handler": "save_record",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Logical table, e.g. 'leads', 'projects', 'rab_items'."
+          },
+          "data": {
+            "type": "object",
+            "description": "The record as key/value pairs."
+          }
+        },
+        "required": [
+          "table",
+          "data"
+        ]
+      }
+    },
+    {
+      "name": "lookup_record",
+      "description": "Search the local datastore for records in a table whose fields contain the query string. Use to recall leads, projects, past prices, or approvals.",
+      "handler": "lookup_record",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Logical table to search."
+          },
+          "query": {
+            "type": "string",
+            "description": "Case-insensitive substring; empty returns all."
+          }
+        },
+        "required": [
+          "table"
+        ]
+      }
+    },
+    {
+      "name": "create_task",
+      "description": "Create a follow-up task with an optional due date. Use whenever work surfaces something a human must do later (schedule survey, send proposal, order material).",
+      "handler": "create_task",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Short imperative title."
+          },
+          "due": {
+            "type": "string",
+            "description": "Optional ISO date or natural phrase."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional details/context."
+          }
+        },
+        "required": [
+          "title"
+        ]
+      }
+    },
+    {
+      "name": "parse_lead",
+      "description": "Extract a structured interior-design lead from a raw inbound inquiry (WhatsApp/Instagram/email). Returns name, source, space type, area (m2), budget (IDR), location, and the core need. Use at stage 1 (lead intake) before saving the lead.",
+      "handler": "parse_lead",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Raw inbound inquiry text."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "whatsapp",
+              "instagram",
+              "website",
+              "referral",
+              "walk_in",
+              "other"
+            ],
+            "description": "Where the lead came from, if known."
+          }
+        },
+        "required": [
+          "message"
+        ]
+      }
+    },
+    {
+      "name": "draft_brief",
+      "description": "Turn raw briefing/discussion notes into a structured design brief (fungsi ruang, style, prioritas, budget, timeline, scope) in Bahasa Indonesia. Use at stage 2 (briefing).",
+      "handler": "draft_brief",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "projectTitle": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Raw briefing notes from the client discussion."
+          },
+          "spaceType": {
+            "type": "string",
+            "description": "rumah, kos, cafe, kantor, hotel, retail, other."
+          },
+          "budgetIdr": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "notes"
+        ]
+      }
+    },
+    {
+      "name": "draft_proposal",
+      "description": "Draft a project proposal + rough quotation from an approved brief and scope: scope of work, design fee, build estimate, timeline, payment terms, included revisions. Output is a DRAFT for human review (stage 4). Never send to the client automatically.",
+      "handler": "draft_proposal",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "projectTitle": {
+            "type": "string"
+          },
+          "brief": {
+            "type": "string",
+            "description": "The approved design brief or its summary."
+          },
+          "scope": {
+            "type": "string",
+            "description": "Scope of work to quote."
+          },
+          "budgetIdr": {
+            "type": "number",
+            "description": "Client budget ceiling, if known."
+          }
+        },
+        "required": [
+          "brief"
+        ]
+      }
+    },
+    {
+      "name": "estimate_rab",
+      "description": "Compute a detailed RAB / Bill of Quantities from line items. Groups by category (furniture, material, finishing, sipil, listrik, lighting, dekorasi, jasa, transport, lain), totals each line (qty x unitPriceIdr), adds a contingency, and returns category subtotals + grand total. Use at stage 10 (RAB final).",
+      "handler": "estimate_rab",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "projectTitle": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "description": "Line items to total.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "category": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "qty": {
+                  "type": "number"
+                },
+                "unitPriceIdr": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "name",
+                "qty",
+                "unitPriceIdr"
+              ]
+            }
+          },
+          "contingencyPct": {
+            "type": "number",
+            "description": "Contingency percent to add (default 5)."
+          }
+        },
+        "required": [
+          "items"
+        ]
+      }
+    },
+    {
+      "name": "material_takeoff",
+      "description": "Quantity takeoff for custom furniture: from a panel list compute total board area (m2), plywood sheets needed (standard 1220x2440 = 2.88 m2, rounded up with waste), and edging metres. Feeds the RAB (stage 10).",
+      "handler": "material_takeoff",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "panels": {
+            "type": "array",
+            "description": "Furniture panels.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "widthM": {
+                  "type": "number"
+                },
+                "heightM": {
+                  "type": "number"
+                },
+                "qty": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "widthM",
+                "heightM"
+              ]
+            }
+          }
+        },
+        "required": [
+          "panels"
+        ]
+      }
+    },
+    {
+      "name": "generate_bast",
+      "description": "Generate a handover document (Berita Acara Serah Terima) from project data: items delivered, scope completed, warranty terms, and sign-off blocks for studio + client. Use at stage 15 (handover).",
+      "handler": "generate_bast",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "projectTitle": {
+            "type": "string"
+          },
+          "clientName": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "description": "Project code, e.g. ID-2026-014."
+          },
+          "itemsDelivered": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warranty": {
+            "type": "string",
+            "description": "Warranty terms, if any."
+          }
+        },
+        "required": [
+          "projectTitle",
+          "clientName"
+        ]
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "name": "intake-lead",
+      "description": "Stage 1: parse a new inbound inquiry, log the lead, draft a WhatsApp acknowledgment, and create a survey-scheduling task.",
+      "prompt": "Read the newest inquiry in ./inbox (or use the text I provide). Call parse_lead to extract structured fields, then save_record('leads', ...). Draft a short, warm WhatsApp acknowledgment in Bahasa Indonesia and write it to ./output as 'wa-ack-<name>.md' (DRAFT for me to send — do not send it). Finally create_task to schedule the site survey. Tell me the lead summary, the draft path, and the task.",
+      "schedule": null
+    },
+    {
+      "name": "prepare-briefing",
+      "description": "Stage 2: turn briefing notes into a structured design brief and set up the next steps.",
+      "prompt": "Read the briefing notes I point you to (or in ./inbox). Call draft_brief, then write the brief to ./output as 'brief-<project>.md' and save_record('projects', {stage:'briefing', ...}). Create tasks for: prepare moodboard, confirm survey date. Summarize the brief and list what you created.",
+      "schedule": null
+    },
+    {
+      "name": "proposal-pack",
+      "description": "Stage 4 + 10: from an approved brief, draft a proposal + rough RAB for human review (approval-gated send).",
+      "prompt": "Using the approved brief I reference, call draft_proposal and estimate_rab (use material_takeoff if a panel list is provided). Write 'proposal-<project>.md' and 'rab-<project>.md' to ./output, and save_record('rab_items', ...) for the line items. Create a task: 'Review & send proposal to client' (this is approval-gated — do NOT send). Report the totals and the file paths.",
+      "schedule": null
+    },
+    {
+      "name": "daily-project-digest",
+      "description": "Every morning: summarize active projects by stage, flag deadlines at risk and pending approval gates, and create follow-up tasks.",
+      "prompt": "Look up all records in 'projects'. Produce a dated digest 'digest-<today>.md' in ./output: group active projects by current stage, flag any with a deadline within 3 days or stuck waiting on an approval/payment gate, and list a combined action list. Create a task for each at-risk item. End with a one-line status summary.",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}

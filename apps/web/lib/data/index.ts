@@ -1,15 +1,17 @@
 /**
- * Data layer — one switch between mock and Convex.
+ * Data layer — auto-selects backend.
  *
- * CURRENTLY: Convex (real backend + auth).
- * To go back to offline mock dogfood: comment the two `convex` lines,
- * uncomment the two `mock` lines.
+ * - NEXT_PUBLIC_CONVEX_URL set  -> Convex (real backend + auth).
+ * - not set                     -> in-memory mock (offline dogfood, zero config).
+ *
+ * This keys on the SAME env var as app/providers.tsx, so the data source and the
+ * Convex provider can never disagree (that mismatch was the "missing ConvexProvider"
+ * crash). Pages only import from "@/lib/data".
  */
-// import * as mock from "./mock";
+import * as mock from "./mock";
 import * as convex from "./convexApi";
 
-// const P = mock;
-const P = convex;
+const P = process.env.NEXT_PUBLIC_CONVEX_URL ? convex : mock;
 
 export const useDashboard = P.useDashboard;
 export const useProjectDetail = P.useProjectDetail;

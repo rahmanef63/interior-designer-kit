@@ -10,6 +10,7 @@
 
 import type * as ai from "../ai.js";
 import type * as aiKeys from "../aiKeys.js";
+import type * as auth from "../auth.js";
 import type * as automation from "../automation.js";
 import type * as briefing from "../briefing.js";
 import type * as clients from "../clients.js";
@@ -21,6 +22,7 @@ import type * as lib_whatsapp from "../lib/whatsapp.js";
 import type * as members from "../members.js";
 import type * as projects from "../projects.js";
 import type * as seed from "../seed.js";
+import type * as users from "../users.js";
 import type * as validators from "../validators.js";
 import type * as views from "../views.js";
 import type * as workflow from "../workflow.js";
@@ -34,6 +36,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   aiKeys: typeof aiKeys;
+  auth: typeof auth;
   automation: typeof automation;
   briefing: typeof briefing;
   clients: typeof clients;
@@ -45,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   members: typeof members;
   projects: typeof projects;
   seed: typeof seed;
+  users: typeof users;
   validators: typeof validators;
   views: typeof views;
   workflow: typeof workflow;
