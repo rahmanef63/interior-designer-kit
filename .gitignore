@@ -41,3 +41,10 @@ services/**/output/
 # Stray scratch file (sandbox couldn't unlink; safe to delete on Windows)
 .trunctest
 **/.trunctest
+
+# Compiled siblings in the Convex source dir (Convex bundles .ts; never commit
+# compiled .js next to .ts — it breaks `convex dev` with duplicate outputs).
+/packages/convex/convex/*.js
+/packages/convex/convex/*.js.map
+/packages/convex/convex/lib/*.js
+/packages/convex/convex/lib/*.js.map

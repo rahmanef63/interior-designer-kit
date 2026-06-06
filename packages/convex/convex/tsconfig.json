@@ -8,7 +8,8 @@
     "lib": ["ES2021", "dom"],
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "noEmit": true
   },
   "include": ["./**/*"],
   "exclude": ["./_generated"]
