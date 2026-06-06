@@ -1,0 +1,24 @@
+{
+  "name": "interior-design",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-assisted interior design studio platform — 16-stage workflow, hybrid local + web (BYOK).",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "check-types": "turbo run check-types",
+    "convex:dev": "pnpm --filter @id/convex dev",
+    "web:dev": "pnpm --filter @id/web dev",
+    "local": "node local/runner/index.mjs"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.3",
+    "@types/node": "^22.9.0"
+  }
+}

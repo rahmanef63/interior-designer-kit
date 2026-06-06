@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+.next/
+out/
+.turbo/
+
+# Convex
+.convex/
+
+# Env / secrets (BYOK keys live here — never commit)
+.env
+.env.local
+.env.*.local
+local/.env
+
+# Python services
+__pycache__/
+*.pyc
+.venv/
+venv/
+services/**/.venv/
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Generated assets / render output
+local/output/
+services/**/output/
