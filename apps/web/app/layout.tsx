@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { Providers } from "./providers";
 import { ModeBadge } from "@/components/ModeBadge";
+import { AuthNav } from "@/components/AuthNav";
+
+const AUTH_ENABLED = !!process.env.NEXT_PUBLIC_CONVEX_URL;
 
 export const metadata: Metadata = {
   title: "Interior Studio",
@@ -9,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
+  const tree = (
     <html lang="id">
       <body>
         <nav className="topbar">
@@ -21,10 +25,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/dashboard">Pipeline</a>
             <a href="/projects">Projects</a>
             <a href="/settings">Settings</a>
+            <AuthNav />
           </div>
         </nav>
         <Providers>{children}</Providers>
       </body>
     </html>
   );
+  return AUTH_ENABLED ? <ConvexAuthNextjsServerProvider>{tree}</ConvexAuthNextjsServerProvider> : tree;
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import { ReactNode, useMemo } from "react";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexReactClient } from "convex/react";
+import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
 
 /**
- * Wraps the app in a Convex provider when NEXT_PUBLIC_CONVEX_URL is set.
- * Falls back to a passthrough so the UI renders before the backend is wired.
+ * Convex mode: ConvexAuthNextjsProvider (auth + realtime).
+ * Mock mode (no NEXT_PUBLIC_CONVEX_URL): passthrough — dogfood without a backend.
  */
 export function Providers({ children }: { children: ReactNode }) {
   const client = useMemo(() => {
@@ -14,5 +15,5 @@ export function Providers({ children }: { children: ReactNode }) {
   }, []);
 
   if (!client) return <>{children}</>;
-  return <ConvexProvider client={client}>{children}</ConvexProvider>;
+  return <ConvexAuthNextjsProvider client={client}>{children}</ConvexAuthNextjsProvider>;
 }

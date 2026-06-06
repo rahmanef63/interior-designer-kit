@@ -1,8 +1,12 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 import { stage, role, leadSource, spaceType, projectStatus, stageStatus } from "./validators";
 
 export default defineSchema({
+  // Convex Auth tables (users, authSessions, authAccounts, ...).
+  ...authTables,
+
   members: defineTable({
     name: v.string(),
     email: v.string(),
@@ -27,10 +31,9 @@ export default defineSchema({
     areaSqm: v.optional(v.number()),
     budgetIdr: v.optional(v.number()),
     deadline: v.optional(v.number()),
-    surveyAt: v.optional(v.number()), // scheduled site survey (set during lead→briefing)
+    surveyAt: v.optional(v.number()),
     status: projectStatus,
     currentStage: stage,
-    // Assigned members per role, e.g. [{ role: "designer", memberId }].
     pic: v.optional(v.array(v.object({ role, memberId: v.id("members") }))),
   })
     .index("by_status", ["status"])
@@ -75,10 +78,9 @@ export default defineSchema({
     unitPriceIdr: v.number(),
   }).index("by_project", ["projectId"]),
 
-  // Stage 2 output: structured design brief (AI-drafted, designer-edited).
   briefs: defineTable({
     projectId: v.id("projects"),
-    summary: v.string(), // markdown
+    summary: v.string(),
     fungsi: v.optional(v.string()),
     style: v.optional(v.string()),
     prioritas: v.optional(v.string()),
@@ -86,11 +88,10 @@ export default defineSchema({
     scope: v.optional(v.string()),
   }).index("by_project", ["projectId"]),
 
-  // BYOK: web users store their own AI key, encrypted at rest.
   aiKeys: defineTable({
-    ownerId: v.string(), // user or studio id
+    ownerId: v.string(),
     provider: v.union(v.literal("anthropic"), v.literal("openai")),
-    encryptedKey: v.string(), // AES-256-GCM ciphertext (see lib/crypto.ts)
+    encryptedKey: v.string(),
     label: v.optional(v.string()),
   }).index("by_owner", ["ownerId"]),
 });

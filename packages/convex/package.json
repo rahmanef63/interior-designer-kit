@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "convex dev",
     "deploy": "convex deploy",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc -p convex/tsconfig.json"
   },
   "dependencies": {
+    "@auth/core": "0.37.0",
+    "@convex-dev/auth": "^0.0.81",
     "convex": "^1.17.0"
   },
   "devDependencies": {
